@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>S W A M P 🥴 S T O N E R</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Creepster&family=Silkscreen:wght@400;700&family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <script
+      src="https://kit.fontawesome.com/ad3ef7551b.js"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="episodes.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <nav>
+        <div class="logo text-outlinfe">
+          <a href="index.html"><p class="vt323-regular">SWAMP STONER</p> </a>
+        </div>
+
+        <!-- Desktop Nav Links -->
+        <div class="nav-links">
+          <ul>
+            <li><a href="index.html">HOME</a></li>
+            <li><a href="episodes.html">EPISODES</a></li>
+            <li><a href="games.html">GAMES</a></li>
+            <li><a href="#">ABOUT</a></li>
+            <li><a href="#">CONTACT</a></li>
+          </ul>
+        </div>
+
+        <!-- Mobile Nav Menu -->
+        <div class="nav-menu">
+          <ul>
+            <li><a href="index.html">HOME</a></li>
+            <li><a href="episodes.html">EPISODES</a></li>
+            <li><a href="games.html">GAMES</a></li>
+            <li><a href="#">ABOUT</a></li>
+            <li><a href="#">CONTACT</a></li>
+          </ul>
+        </div>
+
+        <div class="hamburger">
+          <div class="bar bar1"></div>
+          <div class="bar bar2"></div>
+          <div class="bar bar3"></div>
+        </div>
+      </nav>
+    </header>
+
+    <audio id="menuSound" src="mp3/menu.mp3" preload="auto"></audio>
+
+    <div class="audio-container">
+      <div class="audio-player">
+        <h1 class="text-outline">EPISODES</h1>
+        <ul class="playlist">
+          <li data-src="mp3/menu.mp3">Ep1 - Master Killer shares his wisdom</li>
+          <li data-src="track2.mp3">Track 2</li>
+          <li data-src="track3.mp3">Track 3</li>
+          <li data-src="track4.mp3">Track 4</li>
+          <li data-src="track5.mp3">Track 5</li>
+        </ul>
+
+        <audio id="audio" controls>
+          <source src="track1.mp3" type="audio/mp3" />
+          Your browser does not support the audio element.
+        </audio>
+      </div>
+    </div>
+
+    <script src="episodes.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

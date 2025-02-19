@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bubble Trouble</title>
+    <style>
+      body {
+        background-color: #222;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        padding: 20px;
+        font-family: "Press Start 2P", Arial, sans-serif;
+      }
+      canvas {
+        border: 4px solid #444;
+        background-color: #000;
+      }
+      #game-stats {
+        color: #fff;
+        margin-top: 10px;
+        font-size: 20px;
+      }
+      .button-container {
+        margin-top: 20px;
+      }
+      button {
+        background-color: #444;
+        color: #fff;
+        border: 2px solid #fff;
+        padding: 10px 20px;
+        font-family: "Press Start 2P", Arial, sans-serif;
+        font-size: 16px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background-color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-stats">
+      Score: <span id="score">0</span> Level: <span id="level">1</span>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div class="button-container">
+      <button id="startButton">Start Game</button>
+      <button id="replayButton">Replay</button>
+    </div>
+
+    <script>
+      // Your existing JavaScript code goes here
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      const scoreElement = document.getElementById("score");
+      const levelElement = document.getElementById("level");
+      const startButton = document.getElementById("startButton");
+      const replayButton = document.getElementById("replayButton");
+
+      // Set canvas size
+      canvas.width = 800;
+      canvas.height = 600;
+
+      // Game state
+      let score = 0;
+      let level = 1;
+      let gameLoop;
+      let powerUpTimer = 0;
+      let isGameRunning = false;
+
+      // Player properties
+      const player = {
+        x: canvas.width / 2,
+        y: canvas.height - 30,
+        width: 30,
+        height: 30,
+        speed: 5,
+        isJumping: false,
+        jumpPower: 12,
+        jumpVelocity: 0,
+        gravity: 0.5,
+        projectiles: [],
+        hasPowerUp: false,
+        color: "#00ff00",
+      };
+
+      // Bubble properties
+      class Bubble {
+        constructor(x, y, radius, dx, dy) {
+          this.x = x;
+          this.y = y;
+          this.radius = radius;
+          this.dx = dx;
+          this.dy = dy;
+          this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+        }
+
+        update() {
+          // Bounce off walls
+          if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+            this.dx = -this.dx;
+          }
+          // Bounce off ceiling and floor
+          if (
+            this.y + this.radius > canvas.height ||
+            this.y - this.radius < 0
+          ) {
+            this.dy = -this.dy;
+          }
+
+          // Apply gravity and movement
+          this.dy += 0.1;
+          this.x += this.dx;
+          this.y += this.dy;
+
+          // Cap maximum speed
+          this.dy = Math.min(Math.max(this.dy, -8), 8);
+        }
+
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.closePath();
+        }
+      }
+
+      // Power-up class
+      class PowerUp {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.width = 20;
+          this.height = 20;
+          this.type = Math.random() < 0.5 ? "rapidFire" : "invincibility";
+          this.color = this.type === "rapidFire" ? "#ff0000" : "#ffff00";
+        }
+
+        draw() {
+          ctx.fillStyle = this.color;
+          ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+      }
+
+      // Game objects
+      let bubbles = [];
+      let powerUps = [];
+
+      // Initialize level
+      function initLevel() {
+        bubbles = [];
+        powerUps = [];
+
+        // Add bubbles based on level
+        for (let i = 0; i < level + 2; i++) {
+          bubbles.push(
+            new Bubble(
+              Math.random() * (canvas.width - 100) + 50,
+              Math.random() * 200 + 50,
+              40,
+              (Math.random() - 0.5) * 4,
+              -2
+            )
+          );
+        }
+
+        // Add power-ups
+        if (Math.random() < 0.7) {
+          powerUps.push(
+            new PowerUp(
+              Math.random() * (canvas.width - 20),
+              Math.random() * (canvas.height - 100) + 50
+            )
+          );
+        }
+      }
+
+      // Input handling
+      const keys = {};
+      document.addEventListener("keydown", (e) => (keys[e.key] = true));
+      document.addEventListener("keyup", (e) => (keys[e.key] = false));
+
+      // Shooting mechanic
+      document.addEventListener("keydown", (e) => {
+        if (
+          e.key === " " &&
+          (player.hasPowerUp || player.projectiles.length < 3)
+        ) {
+          player.projectiles.push({
+            x: player.x + player.width / 2,
+            y: player.y,
+            width: 4,
+            height: 10,
+            speed: 7,
+          });
+        }
+      });
+
+      // Game loop
+      function gameUpdate() {
+        if (!isGameRunning) return;
+
+        // Clear canvas
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Update player position
+        if (keys["ArrowLeft"]) player.x = Math.max(0, player.x - player.speed);
+        if (keys["ArrowRight"])
+          player.x = Math.min(
+            canvas.width - player.width,
+            player.x + player.speed
+          );
+
+        // Jumping mechanics
+        if (keys["ArrowUp"] && !player.isJumping) {
+          player.isJumping = true;
+          player.jumpVelocity = -player.jumpPower;
+        }
+
+        if (player.isJumping) {
+          player.y += player.jumpVelocity;
+          player.jumpVelocity += player.gravity;
+
+          if (player.y > canvas.height - player.height) {
+            player.y = canvas.height - player.height;
+            player.isJumping = false;
+            player.jumpVelocity = 0;
+          }
+        }
+
+        // Draw player
+        ctx.fillStyle = player.color;
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+
+        // Update and draw projectiles
+        for (let i = player.projectiles.length - 1; i >= 0; i--) {
+          const projectile = player.projectiles[i];
+          projectile.y -= projectile.speed;
+
+          // Remove projectiles that are off screen
+          if (projectile.y < 0) {
+            player.projectiles.splice(i, 1);
+            continue;
+          }
+
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(
+            projectile.x,
+            projectile.y,
+            projectile.width,
+            projectile.height
+          );
+        }
+
+        // Update and draw bubbles
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+          const bubble = bubbles[i];
+          bubble.update();
+          bubble.draw();
+
+          // Check collision with projectiles
+          for (let j = player.projectiles.length - 1; j >= 0; j--) {
+            const projectile = player.projectiles[j];
+            const dx = bubble.x - projectile.x;
+            const dy = bubble.y - projectile.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < bubble.radius + 5) {
+              // Remove projectile
+              player.projectiles.splice(j, 1);
+
+              // Split bubble if large enough
+              if (bubble.radius > 10) {
+                bubbles.push(
+                  new Bubble(
+                    bubble.x,
+                    bubble.y,
+                    bubble.radius / 2,
+                    bubble.dx * 1.5,
+                    -5
+                  )
+                );
+                bubbles.push(
+                  new Bubble(
+                    bubble.x,
+                    bubble.y,
+                    bubble.radius / 2,
+                    -bubble.dx * 1.5,
+                    -5
+                  )
+                );
+              }
+
+              // Remove original bubble
+              bubbles.splice(i, 1);
+              score += 100;
+              scoreElement.textContent = score;
+              break;
+            }
+          }
+
+          // Check collision with player if not invincible
+          if (!player.hasPowerUp) {
+            const dx = bubble.x - (player.x + player.width / 2);
+            const dy = bubble.y - (player.y + player.height / 2);
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < bubble.radius + player.width / 2) {
+              // Game over logic
+              gameOver();
+              return;
+            }
+          }
+        }
+
+        // Update and draw power-ups
+        for (let i = powerUps.length - 1; i >= 0; i--) {
+          const powerUp = powerUps[i];
+          powerUp.draw();
+
+          // Check collision with player
+          if (
+            player.x < powerUp.x + powerUp.width &&
+            player.x + player.width > powerUp.x &&
+            player.y < powerUp.y + powerUp.height &&
+            player.y + player.height > powerUp.y
+          ) {
+            player.hasPowerUp = true;
+            player.color = powerUp.color;
+            powerUps.splice(i, 1);
+            powerUpTimer = 300; // 5 seconds at 60fps
+          }
+        }
+
+        // Power-up timer
+        if (player.hasPowerUp) {
+          powerUpTimer--;
+          if (powerUpTimer <= 0) {
+            player.hasPowerUp = false;
+            player.color = "#00ff00";
+          }
+        }
+
+        // Check level completion
+        if (bubbles.length === 0) {
+          level++;
+          levelElement.textContent = level;
+          initLevel();
+        }
+
+        requestAnimationFrame(gameUpdate);
+      }
+
+      // Game over function
+      function gameOver() {
+        isGameRunning = false;
+        alert(`Game Over! Score: ${score}`);
+        resetGame();
+      }
+
+      // Reset game function
+      function resetGame() {
+        score = 0;
+        level = 1;
+        scoreElement.textContent = score;
+        levelElement.textContent = level;
+        initLevel();
+      }
+
+      // Start game function
+      function startGame() {
+        isGameRunning = true;
+        resetGame();
+        gameUpdate();
+      }
+
+      // Event listeners for buttons
+      startButton.addEventListener("click", startGame);
+      replayButton.addEventListener("click", () => {
+        isGameRunning = true;
+        resetGame();
+        gameUpdate();
+      });
+
+      // Initialize game
+      initLevel();
+    </script>
+  </body>
+</html>

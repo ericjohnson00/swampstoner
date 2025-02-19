@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Text Generator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        padding: 20px;
+      }
+      #output {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        background-color: #fff;
+        border-radius: 5px;
+      }
+      input,
+      button,
+      textarea {
+        font-size: 16px;
+        padding: 10px;
+        margin: 5px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        width: 100%;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>AI Text Generator</h1>
+    <p>Type something below, and the AI will respond:</p>
+    <textarea
+      id="userInput"
+      placeholder="Enter your text here..."
+      rows="5"
+    ></textarea>
+    <button id="submitBtn">Generate Response</button>
+    <div id="output"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

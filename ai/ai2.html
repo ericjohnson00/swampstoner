@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Text Generator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        width: 80%;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 50px;
+      }
+      #output {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #e0e0e0;
+        border-radius: 5px;
+      }
+      input[type="text"] {
+        padding: 10px;
+        width: 100%;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>AI Text Generator</h1>
+      <p>Type something and get a response from GPT-4 AI!</p>
+      <input type="text" id="userInput" placeholder="Enter your message..." />
+      <button id="submitBtn">Generate Response</button>
+      <div id="output">Response will appear here...</div>
+    </div>
+
+    <script>
+      "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"; // Replace with your OpenAI API key
+      const apiKey = ""; // Replace with your OpenAI API key
+      const submitBtn = document.getElementById("submitBtn");
+      const userInput = document.getElementById("userInput");
+      const outputDiv = document.getElementById("output");
+
+      submitBtn.addEventListener("click", async () => {
+        const prompt = userInput.value.trim();
+        if (!prompt) {
+          outputDiv.textContent = "Please enter some text!";
+          return;
+        }
+
+        outputDiv.textContent = "Loading response...";
+
+        try {
+          const response = await fetch(
+            "https://api.openai.com/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey}`,
+              },
+              body: JSON.stringify({
+                model: "gpt-4o-mini", // Use your specific model here
+                messages: [
+                  { role: "system", content: "You are a helpful assistant." },
+                  { role: "user", content: prompt },
+                ],
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`Error: ${response.status}`);
+          }
+
+          const data = await response.json();
+          outputDiv.textContent = data.choices[0].message.content.trim();
+        } catch (error) {
+          outputDiv.textContent = `Error: ${error.message}`;
+        }
+      });
+    </script>
+  </body>
+</html>
